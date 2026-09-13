@@ -1,7 +1,8 @@
 #Requires -Version 5
 <#
   Reverts the Kontrol S3 Loop/FX pad bank mod: restores the original
-  S3Side.qml / S3Deck.qml from their .orig backups and removes S3LoopFX.qml.
+  S3Side.qml / S3Deck.qml / DeckHelpers.js from their .orig backups and
+  removes S3LoopFX.qml.
 
   Must be run as Administrator.
 #>
@@ -25,10 +26,12 @@ if (-not (Test-Admin)) {
   exit
 }
 
-$s3Dir     = Join-Path $InstallPath "Resources64\qml\CSI\S3"
-$sidePath  = Join-Path $s3Dir "S3Side.qml"
-$deckPath  = Join-Path $s3Dir "S3Deck.qml"
-$loopFxDst = Join-Path $s3Dir "S3LoopFX.qml"
+$s3Dir           = Join-Path $InstallPath "Resources64\qml\CSI\S3"
+$commonDir       = Join-Path $InstallPath "Resources64\qml\CSI\Common"
+$sidePath        = Join-Path $s3Dir "S3Side.qml"
+$deckPath        = Join-Path $s3Dir "S3Deck.qml"
+$loopFxDst       = Join-Path $s3Dir "S3LoopFX.qml"
+$deckHelpersPath = Join-Path $commonDir "DeckHelpers.js"
 
 function Restore-Backup {
   param([string]$Path)
@@ -45,6 +48,7 @@ function Restore-Backup {
 Write-Host "Restoring originals..."
 Restore-Backup $sidePath
 Restore-Backup $deckPath
+Restore-Backup $deckHelpersPath
 
 if (Test-Path $loopFxDst) {
   Remove-Item $loopFxDst -Force

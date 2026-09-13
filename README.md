@@ -1,9 +1,39 @@
 # Traktor Pro 4 - Kontrol S3 Loop/FX Pad Bank
 
-Repurposes the Kontrol S3's **SAMPLES** button. On a 4 (track-)deck setup
-that button normally does nothing — it only ever activates if the *other*
-physical deck happens to be loaded with a Remix Set. If you never use Remix
-Decks, it's a dead button. This mod turns it into a second, useful pad bank:
+A small mod for the Native Instruments Kontrol S3 on Traktor Pro 4.
+
+## What it does
+
+1. **Turns the unused SAMPLES button into a second pad bank.** On a 4
+   (track-)deck setup, SAMPLES normally does nothing — it only lights up if
+   the *other* physical deck happens to be loaded with a Remix Set. This mod
+   makes it always switch a deck's 8 pads into a Loop/Key pad bank instead.
+2. **Jogwheel ring "spinning beat counter."** The LED ring around each
+   jogwheel chases around in time with the beat (or shows a loop indicator
+   while a loop is active), plus a spin animation while a track is loading.
+3. **Custom deck colors.** Pick your own color for each of the 4 decks
+   (used for the jogwheel rings, pad LEDs, etc.) instead of Traktor's
+   stock colors.
+
+## Quick start
+
+1. Download/clone this whole folder.
+2. Right-click `install.ps1` → **Run with PowerShell**.
+   - It will ask for admin rights (a Windows popup) — say yes. This is
+     needed because the files it changes live under `Program Files`.
+   - A console window opens. It'll show you a recommended set of deck
+     colors and ask if you want to use them — press Enter (or `y`) to
+     accept, or `n` to pick your own per deck from a preview list.
+3. Fully quit Traktor Pro 4 (check it isn't still running in the
+   background/system tray) and relaunch it.
+
+That's it. Press **SAMPLES** on the S3 to switch a deck into the new pad
+bank, **HOTCUES** to switch back.
+
+If you ever want to undo everything: right-click `uninstall.ps1` →
+**Run with PowerShell**.
+
+## The pad bank
 
 | Pad            | Function                                                       |
 |----------------|-----------------------------------------------------------------|
@@ -17,10 +47,85 @@ Decks, it's a dead button. This mod turns it into a second, useful pad bank:
 | 7              | Key reset (back to the track's original key)                    |
 | 8              | (unassigned, TBD)                                                |
 
-Press **SAMPLES** to switch a deck's 8 pads into this bank, **HOTCUES** to
-switch back.
+## Requirements
 
-### Why pads 3/4/8 are still open
+- Traktor Pro 4 (tested against the version installed at the time this was
+  written; see "If the patch doesn't apply" below for other versions)
+- A Kontrol S3
+- Windows, with the ability to run PowerShell as Administrator
+
+## Credit / not all original work
+
+This mod is built on top of files that already existed on my own Traktor
+install — I'd modified Traktor's stock S3 mapping myself a while back
+(deck colors, and the jogwheel-ring spin/beat-counter behavior), and at
+this point I honestly don't remember where the jogwheel-ring QML
+originally came from — likely adapted from a mapping I found online
+somewhere (possibly a forum post or another user's shared mod) rather than
+something I wrote from scratch. If you recognize this code and know the
+original source, please open an issue so I can credit it properly.
+
+What I can say for sure is original to this repo:
+- Repurposing SAMPLES into a pad bank (`S3Side.qml` patch)
+- The Loop In/Out + key-transpose pad bank itself (`S3LoopFX.qml`)
+- The interactive/scriptable installer and deck-color picker
+
+The jogwheel-ring spin/beat-counter and load animation (in `S3Deck.qml`)
+predate this repo and aren't guaranteed to be my own original work.
+
+## More details
+
+<details>
+<summary>Command-line options</summary>
+
+- If Traktor is installed somewhere other than the default
+  `C:\Program Files\Native Instruments\Traktor Pro 4`, run from a
+  PowerShell prompt so you can pass the path:
+  ```powershell
+  .\install.ps1 -InstallPath "D:\Native Instruments\Traktor Pro 4"
+  ```
+- To skip the interactive color prompt entirely, pass your colors up
+  front (valid names: White, Black, Blue, Red, Green, Yellow,
+  LightOrange, Purple, Mint, Cyan, Plum, Fuchsia):
+  ```powershell
+  .\install.ps1 -DeckColors "Mint,Cyan,Plum,Fuchsia"
+  ```
+- `-Force` restores `S3Side.qml` / `S3Deck.qml` / `DeckHelpers.js` from
+  their `.orig` backups first (if one exists), then patches fresh — so it
+  doesn't matter whether the file on disk is untouched, already patched,
+  or hand-edited. It also re-prompts for deck colors instead of keeping
+  your previous choice. Use this after editing anything under `payload\`,
+  or to repair a file you broke by hand:
+  ```powershell
+  .\install.ps1 -Force -InstallPath "D:\Native Instruments\Traktor Pro 4" -DeckColors "Mint,Cyan,Plum,Fuchsia"
+  ```
+
+It's safe to re-run plainly (no flags) — it detects whether each patch is
+already applied and skips it instead of double-patching, and remembers
+you've already picked deck colors so it won't re-prompt.
+
+</details>
+
+<details>
+<summary>What files it touches</summary>
+
+```
+Resources64\qml\CSI\S3\S3Side.qml          (patched, original saved as S3Side.qml.orig)
+Resources64\qml\CSI\S3\S3Deck.qml          (replaced, original saved as S3Deck.qml.orig)
+Resources64\qml\CSI\S3\S3LoopFX.qml        (new file)
+Resources64\qml\CSI\Common\DeckHelpers.js  (replaced, original saved as DeckHelpers.js.orig)
+```
+
+**Heads up**: `DeckHelpers.js` lives under `Resources64\qml\CSI\Common\`,
+a shared folder used by *every* NI controller's mapping, not just the S3.
+If you also use another Native Instruments controller (S4 MK3, S8, etc.)
+on the same Traktor install, its deck colors will change too, since they
+likely call the same `colorForDeck()` function.
+
+</details>
+
+<details>
+<summary>Why pads 3/4/8 are still open</summary>
 
 An earlier version gave pads 3/4 an effect-select role (cycle through the
 FX unit's effect list) and pads 5-8 direct control of that effect's
@@ -39,7 +144,10 @@ S3 has no free absolute-position control to dedicate to it, so that whole
 feature was pulled in favor of key transpose. Pads 3, 4, and 8 are free
 for whatever's next.
 
-## Why not continuous loop-edge nudging?
+</details>
+
+<details>
+<summary>Why not continuous loop-edge nudging?</summary>
 
 The original ask this was built from also wanted: hold Loop In/Out and turn
 the jogwheel to continuously shrink/grow the loop, instead of only fixed
@@ -53,59 +161,10 @@ not locked to the beat grid), which is the closest real equivalent — but not
 a jogwheel-driven nudge, because Traktor doesn't expose that hook to any
 controller.
 
-## Requirements
+</details>
 
-- Traktor Pro 4 (tested against the version installed at the time this was
-  written; see "If the patch doesn't apply" below for other versions)
-- A Kontrol S3
-- Windows, with the ability to run PowerShell as Administrator
-
-## Install
-
-1. Download/clone this whole folder.
-2. Right-click `install.ps1` -> **Run with PowerShell** (it will
-   self-elevate and prompt for admin — that's required because the target
-   files live under `Program Files`).
-   - If Traktor is installed somewhere other than the default
-     `C:\Program Files\Native Instruments\Traktor Pro 4`, run it from a
-     PowerShell prompt instead so you can pass the path:
-     ```powershell
-     .\install.ps1 -InstallPath "D:\Native Instruments\Traktor Pro 4"
-     ```
-3. Fully quit Traktor Pro 4 (check it isn't still running in the background)
-   and relaunch it.
-
-The installer only ever touches:
-```
-Resources64\qml\CSI\S3\S3Side.qml   (patched, original saved as S3Side.qml.orig)
-Resources64\qml\CSI\S3\S3Deck.qml   (patched, original saved as S3Deck.qml.orig)
-Resources64\qml\CSI\S3\S3LoopFX.qml (new file)
-```
-It's safe to re-run — it detects whether each patch is already applied and
-skips it instead of double-patching.
-
-### `-Force`
-
-```powershell
-.\install.ps1 -Force
-```
-
-Restores `S3Side.qml` / `S3Deck.qml` from their `.orig` backups first (if
-one exists), then patches — so it doesn't matter whether the file on disk
-right now is untouched, already patched, or was hand-edited, it always
-patches fresh from the known-original baseline. Use this after editing
-`payload\S3LoopFX.qml`, or to repair a file you broke by hand. Combine with
-`-InstallPath` the same way:
-```powershell
-.\install.ps1 -Force -InstallPath "D:\Native Instruments\Traktor Pro 4"
-```
-
-## Uninstall
-
-Right-click `uninstall.ps1` -> **Run with PowerShell**. It restores both
-patched files from their `.orig` backups and deletes `S3LoopFX.qml`.
-
-## If the patch doesn't apply (Traktor update changed the stock files)
+<details>
+<summary>If the patch doesn't apply (Traktor update changed the stock files)</summary>
 
 The installer matches the *exact* stock text of the blocks it changes. If
 NI ships an update that rewords those files, it will print a warning and
@@ -123,8 +182,9 @@ Wire
 }
 ```
 
-**`S3Deck.qml`** — inside the `Module { ... }` block, right after the
-existing `S3Samples { ... }` submodule, add:
+**`S3Deck.qml`** — replace the whole file with `payload\S3Deck.qml`, then
+inside its `Module { ... }` block, right after the `S3Samples { ... }`
+submodule, add:
 ```qml
 S3LoopFX
 {
@@ -136,8 +196,14 @@ S3LoopFX
     shift: module.shift
 }
 ```
-
 Then copy `payload\S3LoopFX.qml` into `Resources64\qml\CSI\S3\S3LoopFX.qml`.
+
+**`DeckHelpers.js`** — copy `payload\DeckHelpers.js` over
+`Resources64\qml\CSI\Common\DeckHelpers.js`, editing the four
+`return Color.XXX;` lines in `colorForDeck()` to whatever colors you want
+per deck first.
+
+</details>
 
 ## Notes
 
@@ -145,7 +211,11 @@ Then copy `payload\S3LoopFX.qml` into `Resources64\qml\CSI\S3\S3LoopFX.qml`.
   supported plugin system for this — Traktor's S-series controller
   integration is compiled into the app's QML resources). A Traktor
   update may overwrite these files and require reinstalling this mod.
-- If you're also running other S3 mods (e.g. custom deck colors), this
-  patch is additive and shouldn't conflict — it only touches the trailing
-  submodule list in `S3Deck.qml` and the SAMPLES-button wiring in
-  `S3Side.qml`.
+- `S3Deck.qml` and `DeckHelpers.js` are replaced wholesale rather than
+  patched as fragments (both are short/self-contained enough that a full
+  replace is simpler and more reliable). If you've made your *own* other
+  edits to either file beyond deck colors and the jogwheel-ring behavior
+  described here, merge them into `payload\S3Deck.qml` /
+  `payload\DeckHelpers.js` before installing, or they'll be overwritten.
+- `S3Side.qml` is patched as a small fragment and won't touch anything
+  else in that file.
